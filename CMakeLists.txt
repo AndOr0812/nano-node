@@ -100,6 +100,8 @@ else ()
 	endif()
 endif (APPLE)
 
+include(custom.cmake OPTIONAL NO_POLICY_SCOPE)
+
 if (RAIBLOCKS_GUI)
 	if (WIN32)
 		set (PLATFORM_QT_PACKAGES WinExtras)
@@ -107,14 +109,14 @@ if (RAIBLOCKS_GUI)
 		set (PLATFORM_QT_PACKAGES)
 	endif (WIN32)
 
-	find_package (Qt5 COMPONENTS Core Gui Widgets Test ${PLATFORM_QT_PACKAGES})
+	find_package (Qt5 COMPONENTS Core Gui Widgets Test ${PLATFORM_QT_PACKAGES} NO_POLICY_SCOPE)
 	include_directories (${Qt5Core_INCLUDE_DIRS} ${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS} ${Qt5Test_INCLUDE_DIRS})
 endif (RAIBLOCKS_GUI)
 
 if (RAIBLOCKS_SECURE_RPC)
 	set (OPENSSL_USE_STATIC_LIBS TRUE)
 	set (OPENSSL_MSVC_STATIC_RT TRUE)
-	find_package (OpenSSL 1.0 EXACT REQUIRED)
+	find_package (OpenSSL 1.0 EXACT REQUIRED NO_POLICY_SCOPE)
 	include_directories(${OPENSSL_INCLUDE_DIR})
 	add_definitions (-DRAIBLOCKS_SECURE_RPC)
 	message("OpenSSL include dir: ${OPENSSL_INCLUDE_DIR}")
@@ -134,7 +136,7 @@ if (BOOST_CUSTOM)
     list(APPEND CMAKE_MODULE_PATH ".\\" ${CMAKE_SOURCE_PATH})
 endif (BOOST_CUSTOM)
 
-find_package (Boost 1.66.0 REQUIRED COMPONENTS date_time filesystem system log log_setup thread program_options regex chrono atomic)
+find_package (Boost 1.66.0 EXACT REQUIRED COMPONENTS date_time filesystem system log log_setup thread program_options regex chrono atomic NO_POLICY_SCOPE)
 include_directories (${Boost_INCLUDE_DIR})
 
 add_library (ed25519
@@ -270,7 +272,7 @@ file (WRITE ${CMAKE_BINARY_DIR}/bootstrap_weights.cpp "#include <cstddef>\n"
 	"	unsigned char rai_bootstrap_weights[] = {${filedata} 0x00};\n"
 	"	size_t rai_bootstrap_weights_size = sizeof(rai_bootstrap_weights) - 1;\n"
 	"}\n")
-	
+
 if (RAIBLOCKS_SECURE_RPC)
 	set (SECURE_RPC_SOURCE rai/node/rpc_secure.cpp rai/node/rpc_secure.hpp)
 endif ()
@@ -328,7 +330,6 @@ add_library (node
 	rai/node/working.hpp
 	rai/node/xorshift.hpp)
 
-
 SET (ACTIVE_NETWORK rai_live_network CACHE STRING "Selects which network parameters are used")
 set_property (CACHE ACTIVE_NETWORK PROPERTY STRINGS rai_test_network rai_beta_network rai_live_network)
 
@@ -357,7 +358,7 @@ if (RAIBLOCKS_TEST)
 
 	add_executable (slow_test
 		rai/slow_test/node.cpp)
-	
+
 	set_target_properties (core_test slow_test PROPERTIES COMPILE_FLAGS "${PLATFORM_CXX_FLAGS} ${PLATFORM_COMPILE_FLAGS} -DQT_NO_KEYWORDS -DACTIVE_NETWORK=${ACTIVE_NETWORK} -DRAIBLOCKS_VERSION_MAJOR=${CPACK_PACKAGE_VERSION_MAJOR} -DRAIBLOCKS_VERSION_MINOR=${CPACK_PACKAGE_VERSION_MINOR} -DBOOST_ASIO_HAS_STD_ARRAY=1")
 	set_target_properties (core_test slow_test PROPERTIES LINK_FLAGS "${PLATFORM_LINK_FLAGS}")
 endif (RAIBLOCKS_TEST)
@@ -384,7 +385,7 @@ if (RAIBLOCKS_GUI)
 		rai/qt_system/entry.cpp)
 
 	set_target_properties (nano_wallet qt_test PROPERTIES LINK_FLAGS "${PLATFORM_LINK_FLAGS}")
-	
+
 	set_target_properties (qt_test qt nano_wallet qt_system PROPERTIES COMPILE_FLAGS "${PLATFORM_CXX_FLAGS} ${PLATFORM_COMPILE_FLAGS} -DQT_NO_KEYWORDS -DACTIVE_NETWORK=${ACTIVE_NETWORK} -DRAIBLOCKS_VERSION_MAJOR=${CPACK_PACKAGE_VERSION_MAJOR} -DRAIBLOCKS_VERSION_MINOR=${CPACK_PACKAGE_VERSION_MINOR} -DBOOST_ASIO_HAS_STD_ARRAY=1")
 	set_target_properties (qt qt_system PROPERTIES LINK_FLAGS "${PLATFORM_LINK_FLAGS}")
 endif (RAIBLOCKS_GUI)
@@ -478,4 +479,4 @@ if (RAIBLOCKS_GUI)
 	endif ()
 endif (RAIBLOCKS_GUI)
 
-include (CPack)
+include (CPack NO_POLICY_SCOPE)
