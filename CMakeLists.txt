@@ -99,8 +99,19 @@ endif ()
 
 SET( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${PLATFORM_LINK_FLAGS}" )
 
+set(Boost_USE_STATIC_LIBS        ON)
+set(Boost_USE_MULTITHREADED      ON)
+
+if (BOOST_ROOT)
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules")
+endif ()
+
+include(custom.cmake OPTIONAL NO_POLICY_SCOPE)
+
 if (RAIBLOCKS_SECURE_RPC)
-	find_package (OpenSSL 1.0 REQUIRED)
+	set (OPENSSL_USE_STATIC_LIBS TRUE)
+	set (OPENSSL_MSVC_STATIC_RT TRUE)
+	find_package (OpenSSL 1.1 REQUIRED NO_POLICY_SCOPE)
 	include_directories(${OPENSSL_INCLUDE_DIR})
 	add_definitions (-DRAIBLOCKS_SECURE_RPC)
 	message("OpenSSL include dir: ${OPENSSL_INCLUDE_DIR}")
@@ -113,14 +124,7 @@ endif ()
 
 include_directories (${CMAKE_SOURCE_DIR})
 
-set(Boost_USE_STATIC_LIBS        ON)
-set(Boost_USE_MULTITHREADED      ON)
-
-if (BOOST_ROOT)
-    list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules")
-endif ()
-
-find_package (Boost 1.66.0 REQUIRED COMPONENTS date_time filesystem system log log_setup thread program_options regex chrono atomic)
+find_package (Boost 1.66.0 REQUIRED COMPONENTS date_time filesystem system log log_setup thread program_options regex chrono atomic NO_POLICY_SCOPE)
 
 add_subdirectory(ed25519-donna)
 
@@ -134,7 +138,7 @@ set_target_properties(libminiupnpc-static PROPERTIES INTERFACE_INCLUDE_DIRECTORI
 set (BUILD_SHARED OFF CACHE BOOL "")
 set (BUILD_TESTING OFF CACHE BOOL "")
 set (USE_INTERMEDIATE_OBJECTS_TARGET OFF CACHE BOOL "")
-if (CRYPTOPP_CUSTOM OR NOT RAIBLOCKS_SIMD_OPTIMIZATIONS)
+if (CRYPTOPP_CUSTOM)
 	set (CRYPTOPP_LIBRARY cryptopp)
 	add_library (cryptopp
 		cryptopp/algparam.cpp
@@ -263,7 +267,7 @@ if (RAIBLOCKS_GUI)
 		set (PLATFORM_QT_PACKAGES)
 	endif ()
 
-	find_package (Qt5 COMPONENTS Core Gui Widgets Test ${PLATFORM_QT_PACKAGES})
+	find_package (Qt5 COMPONENTS Core Gui Widgets Test ${PLATFORM_QT_PACKAGES} NO_POLICY_SCOPE)
 
 	add_library (qt
 		rai/qt/qt.cpp
@@ -375,4 +379,4 @@ endif ()
 
 set (CPACK_RESOURCE_FILE_LICENSE ${CMAKE_SOURCE_DIR}/LICENSE)
 
-include (CPack)
+include (CPack NO_POLICY_SCOPE)
