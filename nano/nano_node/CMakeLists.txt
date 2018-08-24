@@ -1,4 +1,11 @@
+if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+	if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/CMakeFiles/nano_node.rc")
+		set (platform_sources "${CMAKE_CURRENT_SOURCE_DIR}/CMakeFiles/nano_node.rc")
+	endif ()
+endif ()
+
 add_executable (nano_node
+	${platform_sources}
 	daemon.cpp
 	daemon.hpp
 	entry.cpp)

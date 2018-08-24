@@ -14,32 +14,26 @@ environment:
       configuration: RelWithDebInfo
 clone_folder: C:\projects\myproject
 install:
-- cmd: >-
-    git submodule update --init --recursive
-
-    cmake -DNANO_GUI=ON -DCMAKE_BUILD_TYPE=%CONFIGURATION% -DACTIVE_NETWORK=%NETWORK% -DQt5_DIR="C:\Qt\5.9\msvc2017_64\lib\cmake\Qt5" -DNANO_SIMD_OPTIMIZATIONS=TRUE -DBoost_COMPILER="-vc141" -DBOOST_ROOT="C:/Libraries/boost_1_67_0" -DBOOST_LIBRARYDIR="C:/Libraries/boost_1_67_0/lib64-msvc-14.1" -G "Visual Studio 15 2017 Win64" -DIPHLPAPI_LIBRARY="C:/Program Files (x86)/Windows Kits/10/Lib/10.0.14393.0/um/x64/iphlpapi.lib" -DWINSOCK2_LIBRARY="C:/Program Files (x86)/Windows Kits/10/Lib/10.0.14393.0/um/x64/WS2_32.lib" .
-
-- ps: Invoke-WebRequest -Uri https://aka.ms/vs/15/release/vc_redist.x64.exe -OutFile .\vc_redist.x64.exe
-build:
-  project: INSTALL.vcxproj
-  parallel: true
-  verbosity: minimal
+  - ps: |
+      Remove-Item C:\OpenSSL-Win32 -Force -Recurse
+      Remove-Item C:\OpenSSL-Win64 -Force -Recurse
+      Move-Item C:\OpenSSL-v111-Win64 C:\OpenSSL-Win64 -Force
+  - cmd: git submodule update --init --recursive
+before_build:
+  - cmake -DCMAKE_BUILD_TYPE=%CONFIGURATION% -DACTIVE_NETWORK=%NETWORK% -DBoost_COMPILER="-vc141" -DBOOST_ROOT="C:/Libraries/boost_1_69_0" -DBOOST_LIBRARYDIR="C:/Libraries/boost_1_69_0/lib64-msvc-14.1" -G "Visual Studio 15 2017 Win64" -DIPHLPAPI_LIBRARY="C:/Program Files (x86)/Windows Kits/10/Lib/10.0.14393.0/um/x64/iphlpapi.lib" -DWINSOCK2_LIBRARY="C:/Program Files (x86)/Windows Kits/10/Lib/10.0.14393.0/um/x64/WS2_32.lib" .
+build_script:
+  - cmake --build "%APPVEYOR_BUILD_FOLDER%" --config "%CONFIGURATION%" --target nano_node -- /maxcpucount /verbosity:minimal
 after_build:
-- ps: |
-    if (Test-Path env:CSC_LINK) {
-      $path = Join-Path -Path "$env:TMP" -ChildPath csc.p12
-      [IO.File]::WriteAllBytes($path, [Convert]::FromBase64String($env:CSC_LINK))
+  - ps: |
+      if (Test-Path env:CSC_LINK) {
+        $path = Join-Path -Path "$env:TMP" -ChildPath csc.p12
+        [IO.File]::WriteAllBytes($path, [Convert]::FromBase64String($env:CSC_LINK))
 
-      $args = -split 'sign /a /ph /tr http://timestamp.digicert.com /td sha256 /fd sha256'
-      $args += @('/f', $path, '/p', $env:CSC_KEY_PASSWORD, "$env:APPVEYOR_BUILD_FOLDER\$env:CONFIGURATION\*.exe")
-      . 'C:\Program Files (x86)\Microsoft SDKs\Windows\v7.1A\Bin\signtool.exe' $args
-    }
-- cmd: >-
-    cpack -C %CONFIGURATION% --verbose --config ./CPackConfig.cmake
-
-    cpack -G ZIP -C %CONFIGURATION% --verbose --config ./CPackConfig.cmake
+        $args = -split 'sign /a /ph /tr http://timestamp.digicert.com /td sha256 /fd sha256'
+        $args += @('/f', $path, '/p', $env:CSC_KEY_PASSWORD, "$env:APPVEYOR_BUILD_FOLDER\$env:CONFIGURATION\*.exe")
+        . 'C:\Program Files (x86)\Microsoft SDKs\Windows\v7.1A\Bin\signtool.exe' $args
+      }
+  - cmd: 7z a -tzip -mx=9 node-win32.zip "%APPVEYOR_BUILD_FOLDER%/%CONFIGURATION%/nano_node.exe"
 artifacts:
-- path: nano*.zip
-  name: nano_release_%network%
-- path: nano-node-*.exe
-  name: nano-node-%network%
+  - path: node-win32.zip
+    name: node-win32
