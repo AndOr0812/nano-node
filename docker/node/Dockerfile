@@ -11,16 +11,18 @@ RUN /tmp/util/build_prep/update-common && /tmp/util/build_prep/ubuntu/prep.sh
 
 ADD ./ /tmp/src
 
-RUN mkdir /tmp/build && \
-    cd /tmp/build && \
-    cmake /tmp/src -DBOOST_ROOT=${BOOST_ROOT} -DACTIVE_NETWORK=rai_${NETWORK}_network && \
-    make rai_node && \
-    cd .. && \
-    echo ${NETWORK} > /etc/nano-network
+ARG NETWORK=live
+RUN echo ${NETWORK} > /etc/nano-network
+
+RUN mkdir /tmp/build
+WORKDIR /tmp/build
+
+RUN cmake /tmp/src -DBOOST_ROOT=${BOOST_ROOT} -DACTIVE_NETWORK=rai_${NETWORK}_network
+RUN cmake --build . --config Release --target rai_node
 
 FROM ubuntu:16.04
-COPY --from=0 /tmp/build/rai_node /usr/bin
 COPY --from=0 /etc/nano-network /etc
+COPY --from=0 /tmp/build/rai_node /usr/bin
 COPY docker/node/entry.sh /entry.sh
 COPY docker/node/config /usr/share/raiblocks/config
 RUN chmod +x /entry.sh
