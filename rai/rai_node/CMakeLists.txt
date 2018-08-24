@@ -1,4 +1,11 @@
+if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+	if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/CMakeFiles/rai_node.rc")
+		set (platform_sources "${CMAKE_CURRENT_SOURCE_DIR}/CMakeFiles/rai_node.rc")
+	endif ()
+endif ()
+
 add_executable (rai_node
+	${platform_sources}
 	daemon.cpp
 	daemon.hpp
 	entry.cpp)
