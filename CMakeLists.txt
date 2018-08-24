@@ -31,11 +31,12 @@ endif()
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # TODO check if any library requires these
-#find_package(Threads REQUIRED)
-#set (PLATFORM_LIBS ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_DL_LIBS})
+find_package(Threads REQUIRED)
+set (PLATFORM_LIBS ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_DL_LIBS})
 
 if (WIN32)
 	add_definitions(-D_WIN32_WINNT=0x0600
+					-D_CRT_SECURE_NO_WARNINGS
 					-DWINVER=0x0600
 					-DWIN32_LEAN_AND_MEAN
 					-DMINIUPNP_STATICLIB
@@ -114,14 +115,21 @@ endif ()
 
 SET( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${PLATFORM_LINK_FLAGS}" )
 
+include (Custom.cmake OPTIONAL NO_POLICY_SCOPE)
+
 if (NANO_SECURE_RPC OR RAIBLOCKS_SECURE_RPC)
-	find_package (OpenSSL 1.0 REQUIRED)
+	set (OPENSSL_USE_STATIC_LIBS TRUE)
+	set (OPENSSL_MSVC_STATIC_RT TRUE)
+	find_package (OpenSSL 1.0 REQUIRED NO_POLICY_SCOPE)
 	include_directories(${OPENSSL_INCLUDE_DIR})
 	add_definitions (-DNANO_SECURE_RPC)
 	message("OpenSSL include dir: ${OPENSSL_INCLUDE_DIR}")
 	message("OpenSSL libraries: ${OPENSSL_LIBRARIES}")
 	message("OpenSSL lib: ${OPENSSL_SSL_LIBRARY}")
 	message("Crypto lib: ${OPENSSL_CRYPTO_LIBRARY}")
+	if (WIN32)
+		set (PLATFORM_LIBS ${PLATFORM_LIBS} crypt32.lib)
+	endif ()
 else ()
 	set (OPENSSL_LIBRARIES "")
 endif ()
@@ -135,7 +143,7 @@ if (BOOST_ROOT)
 	list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/Modules")
 endif ()
 
-find_package (Boost 1.66.0 REQUIRED COMPONENTS filesystem log thread program_options system)
+find_package (Boost 1.66.0 REQUIRED COMPONENTS filesystem log thread program_options system NO_POLICY_SCOPE)
 
 add_subdirectory(crypto/ed25519-donna)
 
@@ -304,7 +312,7 @@ if (NANO_GUI OR RAIBLOCKS_GUI)
 		set (PLATFORM_QT_PACKAGES)
 	endif ()
 
-	find_package (Qt5 COMPONENTS Core Gui Widgets Test ${PLATFORM_QT_PACKAGES})
+	find_package (Qt5 COMPONENTS Core Gui Widgets Test ${PLATFORM_QT_PACKAGES} NO_POLICY_SCOPE)
 
 	add_library (qt
 		nano/qt/qt.cpp
@@ -425,4 +433,4 @@ endif ()
 
 set (CPACK_RESOURCE_FILE_LICENSE ${CMAKE_SOURCE_DIR}/LICENSE)
 
-include (CPack)
+include (CPack NO_POLICY_SCOPE)

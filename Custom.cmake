@@ -1,0 +1,52 @@
+option(DISABLE_NATIVE_ARCH "Disable the addition of -march=native" ON)
+
+set (NANO_SECURE_RPC TRUE)
+
+include(CheckCXXCompilerFlag)
+
+if (APPLE)
+	CHECK_CXX_COMPILER_FLAG(-march=core2 COMPILER_SUPPORTS_MARCH_CORE2)
+	if (COMPILER_SUPPORTS_MARCH_CORE2)
+		set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=core2")
+		set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=core2")
+	endif ()
+else ()
+	CHECK_CXX_COMPILER_FLAG(-march=nocona COMPILER_SUPPORTS_MARCH_NOCONA)
+	if (COMPILER_SUPPORTS_MARCH_NOCONA)
+		set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=nocona -mno-sse3")
+		set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=nocona -mno-sse3")
+	endif ()
+endif ()
+
+CHECK_CXX_COMPILER_FLAG(-fvisibility=hidden COMPILER_SUPPORTS_VISIBILITY_HIDDEN)
+if (COMPILER_SUPPORTS_VISIBILITY_HIDDEN)
+	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
+	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
+endif ()
+
+set (CPACK_PACKAGE_VENDOR "Nano Wallet Company LLC")
+set (CPACK_PACKAGE_NAME "Nano Node")
+set (CPACK_PACKAGE_DESCRIPTION "Nano Node")
+set (CPACK_RESOURCE_FILE_LICENSE LICENSE)
+file(STRINGS ${CPACK_RESOURCE_FILE_LICENSE} PROJECT_COPYRIGHT LIMIT_COUNT 1)
+
+if (WIN32)
+	configure_file(nano/nano_node/nano_node.rc.in "nano/nano_node/CMakeFiles/nano_node.rc" NEWLINE_STYLE WIN32)
+	set_source_files_properties(nano/nano_node/CMakeFiles/nano_node.rc LANGUAGE RC)
+endif ()
+
+if (APPLE)
+	set (CMAKE_MACOSX_RPATH TRUE)
+	set (CMAKE_OSX_DEPLOYMENT_TARGET 10.11)
+
+	set (MACOSX_BUNDLE_BUNDLE_NAME ${CPACK_PACKAGE_NAME})
+	set (MACOSX_BUNDLE_EXECUTABLE_NAME "nano_node")
+	set (MACOSX_BUNDLE_GUI_IDENTIFIER "com.nanowalletcompany.node")
+	set (MACOSX_BUNDLE_BUNDLE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
+	set (MACOSX_BUNDLE_SHORT_VERSION_STRING ${MACOSX_BUNDLE_BUNDLE_VERSION})
+	set (MACOSX_BUNDLE_LONG_VERSION_STRING "${MACOSX_BUNDLE_BUNDLE_NAME} ${MACOSX_BUNDLE_SHORT_VERSION_STRING}")
+	set (MACOSX_BUNDLE_COPYRIGHT ${PROJECT_COPYRIGHT})
+	configure_file(nano/nano_node/Info.plist.in "nano/nano_node/CMakeFiles/Info.plist")
+
+	set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-sectcreate,__TEXT,__info_plist,${PROJECT_SOURCE_DIR}/nano/nano_node/CMakeFiles/Info.plist")
+endif ()
