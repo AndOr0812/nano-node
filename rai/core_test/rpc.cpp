@@ -2082,6 +2082,31 @@ TEST (rpc, representatives)
 	ASSERT_EQ (rai::genesis_account, representatives[0]);
 }
 
+TEST (rpc, wallet_seed)
+{
+	rai::system system0 (24000, 1);
+	rai::raw_key seed;
+	{
+		auto transaction (system0.nodes[0]->store.tx_begin ());
+		system0.wallet (0)->store.seed (seed, transaction);
+	}
+	rai::rpc rpc (system0.service, *system0.nodes[0], rai::rpc_config (true));
+	rpc.start ();
+	boost::property_tree::ptree request;
+	request.put ("action", "wallet_seed");
+	request.put ("wallet", system0.nodes[0]->wallets.items.begin ()->first.to_string ());
+	test_response response (request, rpc, system0.service);
+	while (response.status == 0)
+	{
+		system0.poll ();
+	}
+	ASSERT_EQ (200, response.status);
+	{
+		std::string seed_text (response.json.get<std::string> ("seed"));
+		ASSERT_EQ (seed.data.to_string (), seed_text);
+	}
+}
+
 TEST (rpc, wallet_change_seed)
 {
 	rai::system system0 (24000, 1);

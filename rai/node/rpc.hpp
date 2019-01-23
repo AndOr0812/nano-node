@@ -198,6 +198,7 @@ public:
 	void wallet_add ();
 	void wallet_add_watch ();
 	void wallet_balances ();
+	void wallet_seed ();
 	void wallet_change_seed ();
 	void wallet_contains ();
 	void wallet_create ();

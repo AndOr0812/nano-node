@@ -3183,6 +3183,27 @@ void rai::rpc_handler::wallet_balances ()
 	response_errors ();
 }
 
+void rai::rpc_handler::wallet_seed ()
+{
+	rpc_control_impl ();
+	auto wallet (wallet_impl ());
+	if (!ec)
+	{
+		auto transaction (node.store.tx_begin_read ());
+		if (wallet->store.valid_password (transaction))
+		{
+			rai::raw_key seed;
+			wallet->store.seed (seed, transaction);
+			response_l.put ("seed", seed.data.to_string ());
+		}
+		else
+		{
+			ec = nano::error_common::wallet_locked;
+		}
+	}
+	response_errors ();
+}
+
 void rai::rpc_handler::wallet_change_seed ()
 {
 	rpc_control_impl ();
@@ -4201,6 +4222,10 @@ void rai::rpc_handler::process_request ()
 			else if (action == "wallet_balances")
 			{
 				wallet_balances ();
+			}
+			else if (action == "wallet_seed")
+			{
+				wallet_seed ();
 			}
 			else if (action == "wallet_change_seed")
 			{
