@@ -445,6 +445,7 @@ node (node_a), rpc (rpc_a)
 
 nano::ipc::ipc_server::~ipc_server ()
 {
+	stop ();
 	BOOST_LOG (node.log) << "IPC: server stopped";
 }
 
