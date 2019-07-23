@@ -1,5 +1,8 @@
 FROM nanocurrency/nano-env:gcc
 
+RUN apt-get --yes update
+RUN apt-get --yes install libssl-dev
+
 ARG NETWORK=live
 ADD ./ /tmp/src
 
@@ -7,13 +10,13 @@ RUN mkdir /tmp/build && \
     cd /tmp/build && \
     cmake /tmp/src -DBOOST_ROOT=${BOOST_ROOT} -DACTIVE_NETWORK=nano_${NETWORK}_network && \
     make nano_node && \
-    make nano_rpc && \
+    # make nano_rpc && \
     cd .. && \
     echo ${NETWORK} > /etc/nano-network
 
 FROM ubuntu:16.04
 COPY --from=0 /tmp/build/nano_node /usr/bin
-COPY --from=0 /tmp/build/nano_rpc /usr/bin
+# COPY --from=0 /tmp/build/nano_rpc /usr/bin
 COPY --from=0 /etc/nano-network /etc
 COPY docker/node/entry.sh /entry.sh
 COPY docker/node/config /usr/share/nano/config

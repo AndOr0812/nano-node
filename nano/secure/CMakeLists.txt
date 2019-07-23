@@ -46,6 +46,7 @@ add_library (secure
 	working.hpp)
 
 target_link_libraries(secure
+	${CMAKE_DL_LIBS}
 	nano_lib
 	ed25519
 	crypto_lib
