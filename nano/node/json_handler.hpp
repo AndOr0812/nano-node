@@ -176,7 +176,7 @@ public:
 			this->stop_callback ();
 			this->stop ();
 		}));
-		handler->process_request ();
+		handler->process_request (true);
 	}
 
 	void stop () override
